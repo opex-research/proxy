@@ -106,38 +106,6 @@ func StopProxyCommand() *cobra.Command {
 	return cmd
 }
 
-func GetConfigProxyCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "proxy-config",
-		Short: "returns proxy config.",
-		Run: func(cmd *cobra.Command, args []string) {
-
-			// read config file
-			jsonFile, err := os.Open("proxy/service/config1.json")
-			if err != nil {
-				log.Println("os.Open() error", err)
-			}
-			defer jsonFile.Close()
-
-			// parse json
-			byteValue, _ := ioutil.ReadAll(jsonFile)
-			var configJson ProxyConfig
-			json.Unmarshal(byteValue, &configJson)
-
-			s, err := json.MarshalIndent(configJson, "", "\t")
-			if err != nil {
-				log.Println("json.MashalIndent() error:", err)
-			}
-
-			// print to console
-			fmt.Print(string(s))
-			fmt.Println()
-		},
-	}
-
-	return cmd
-}
-
 func AliveProxyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "proxy-alive",

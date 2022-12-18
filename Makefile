@@ -9,36 +9,30 @@ init: clean setupDeveloperHost
 	git submodule update --init --recursive
 
 setupDeveloperHost:
-	./setup-developer-host-common.sh
+	$(MAKE) -C utl/ setupDeveloperHost
 
 clean:
 	# TODO: remove build outputs
 	rm -rf ./dependencies/jsnark-demo/JsnarkCircuitBuilder/bin
 	rm -rf ./dependencies/libsnark-demo/build
 	rm -rf origo
-	$(MAKE) -C server/ clean
 	$(MAKE) -C proxy/ clean
-	$(MAKE) -C prover/ clean
-	. ./evaluation.sh && cleanEvaluationLogs
-	. ./evaluation.sh && cleanCapturedTraffic
-	. ./evaluation.sh && cleanSnarkFiles
+	$(MAKE) -C utl/ clean
 
 build: clean
-	./utl/build.sh
-	$(MAKE) -C server/ build
+	$(MAKE) -C utl/ build
 	$(MAKE) -C proxy/ build
-	#TODO: check
-	# $(MAKE) -C prover/ build
 	go mod tidy
 	go build -buildvcs=false .
 
-runEvaluationLocal: build
-	. ./evaluation.sh && runEvaluationLocal
-
 buildDockerImage: clean
-	sudo docker image rm origo_image || true
-	sudo docker build -t origo_image -f docker/Dockerfile .
+	$(MAKE) -C utl/ buildDockerImage
+
+buildDockerImageClean: clean
+	$(MAKE) -C utl/ buildDockerImageClean
 
 runDockerImage:
-	sudo docker container rm origo_container || true
-	sudo docker run --name origo_container -p 8082:8082 -it origo_image
+	$(MAKE) -C utl/ runDockerImage
+
+runEvaluationLocal: build
+	$(MAKE) -C utl/ runEvaluationLocal

@@ -33,37 +33,13 @@ func OrigoCommand() *cobra.Command {
 	// proco version command
 	cmd.AddCommand(newVersionCommand())
 
-	// proco server commands
-	cmd.AddCommand(cmds.StartServerCommand())
-	cmd.AddCommand(cmds.StopServerCommand())
-	cmd.AddCommand(cmds.GetConfigServerCommand())
-	cmd.AddCommand(cmds.AliveServerCommand())
-
 	// proco proxy commands
 	cmd.AddCommand(cmds.StartProxyCommand())
 	cmd.AddCommand(cmds.StopProxyCommand())
-	cmd.AddCommand(cmds.GetConfigProxyCommand())
 	cmd.AddCommand(cmds.AliveProxyCommand())
 
 	cmd.AddCommand(cmds.ProxyPostProcessCommand())
 	cmd.AddCommand(cmds.ProxyVerifyCommand())
-
-	// proco prover commands
-	cmd.AddCommand(cmds.ProverRequestCommand())
-
-	cmd.AddCommand(cmds.ProverCompileCommand())
-	cmd.AddCommand(cmds.ProverProveCommand())
-
-	cmd.AddCommand(cmds.ProverCredsListCommand())
-	cmd.AddCommand(cmds.ProverCredsGetCommand())
-	cmd.AddCommand(cmds.ProverCredsRefreshCommand())
-
-	cmd.AddCommand(cmds.ProverConfigCommand())
-
-	// transpiler
-	cmd.AddCommand(cmds.PolicyTranspileCommand())
-	cmd.AddCommand(cmds.PolicyGetCommand())
-	cmd.AddCommand(cmds.PolicyListCommand())
 
 	return cmd
 }

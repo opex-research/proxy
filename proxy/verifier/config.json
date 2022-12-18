@@ -1,9 +1,9 @@
 {
-	"ZkSnarkBuildPath": "prover/zksnark_build/",
+	"ZkSnarkBuildPath": "dependencies/libsnark-demo/build/libsnark/",
 	"StoragePath": "proxy/service/local_storage/",
 	"ProverSentRecordsFileName": "ProverSentRecords",
 	"ServerSentRecordsFileName": "ServerSentRecords",
 	"CertificatePath": "certs/certificates/",
 	"PublicInputFileName": "PublicInput",
-	"ProverShareFilePath": "prover/local_storage/PolicyExtractJsonShared"
+	"ProverShareFilePath": "local_storage/PolicyExtractJsonShared"
 }

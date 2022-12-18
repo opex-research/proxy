@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	lp "github.com/anonymoussubmission001/origo/dependencies/ledger_policy"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,10 +15,8 @@ import (
 	"strconv"
 	"strings"
 
-	lp "github.com/anonymoussubmission001/origo/ledger_policy"
-
 	// TODO: get rid of this import
-	tls "github.com/anonymoussubmission001/origo/prover/tls"
+	tls "github.com/anonymoussubmission001/origo/dependencies/tls"
 )
 
 // ************** start PP struct **************

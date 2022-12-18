@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+type ProcessID struct {
+	Pid int
+}
+
 // logging for evaluation
 func StartLogging(commandName string) (*os.File, time.Time, error) {
 
