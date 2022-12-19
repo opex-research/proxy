@@ -16,7 +16,7 @@ import (
 	"strings"
 
 	// TODO: get rid of this import
-	tls "github.com/anonymoussubmission001/origo/dependencies/tls"
+	mtls "github.com/anonymoussubmission001/origo/dependencies/tls"
 )
 
 // ************** start PP struct **************
@@ -25,7 +25,7 @@ type PP struct {
 	Policy         lp.Policy
 	Config         VerifierConfig
 	PolicyFileName string
-	SharedExtract  tls.SharedPolicyExtract
+	SharedExtract  mtls.SharedPolicyExtract
 }
 
 func NewPP(policyFileName string) (*PP, error) {
@@ -33,8 +33,9 @@ func NewPP(policyFileName string) (*PP, error) {
 	// init empty ApiClient
 	p := new(PP)
 
+	// TODO: fix hardcoded path
 	// open ledger policy and store in proxy Policy struct
-	policyFile, err := os.Open("ledger_policy/" + policyFileName + ".json")
+	policyFile, err := os.Open("dependencies/ledger_policy/" + policyFileName + ".json")
 	if err != nil {
 		log.Println("os.Open() error", err)
 		return nil, err
@@ -43,6 +44,7 @@ func NewPP(policyFileName string) (*PP, error) {
 	byteValue, _ := ioutil.ReadAll(policyFile)
 	json.Unmarshal(byteValue, &p.Policy)
 
+	// TODO: fix hardcoded path
 	// open local verifier config and deserialize to struct
 	configFile, err := os.Open("proxy/verifier/config.json")
 	if err != nil {
@@ -56,7 +58,7 @@ func NewPP(policyFileName string) (*PP, error) {
 	// set inputs to client struct
 	p.PolicyFileName = policyFileName
 
-	// read in to-be-shared extracted tls and record data
+	// read in to-be-shared extracted mtls and record data
 	shareFile, err := os.Open(p.Config.ProverShareFilePath + ".json")
 	if err != nil {
 		log.Println("os.Open() error", err)
@@ -85,8 +87,8 @@ func (p *PP) PostProcess() error {
 	ServerHandshakeTrafficKey, _ := hex.DecodeString(p.SharedExtract.ServerHandshakeTrafficKey)
 	ServerHandshakeTrafficIV, _ := hex.DecodeString(p.SharedExtract.ServerHandshakeTrafficIV)
 
-	// parse tls captured content
-	tlsp, err := tls.RunTLSParser(p.Config.CertificatePath, p.Config.StoragePath, ServerHandshakeTrafficKey, ServerHandshakeTrafficIV, p.Config.ServerSentRecordsFileName, p.Config.ProverSentRecordsFileName)
+	// parse mtls captured content
+	tlsp, err := mtls.RunTLSParser(p.Config.CertificatePath, p.Config.StoragePath, ServerHandshakeTrafficKey, ServerHandshakeTrafficIV, p.Config.ServerSentRecordsFileName, p.Config.ProverSentRecordsFileName)
 	if err != nil {
 		log.Println("TLS parser: please check whether prover shared the up-to-date PolicyExtractJsonShared.json. " + "This error could be caused by malicious Prover!")
 		return err
@@ -202,28 +204,28 @@ type StatementByteFormat struct {
 	HkdfKCAPPIVInnerHash  []byte
 }
 
-func (pd *StatementByteFormat) prepareKDCInnerHash(p *tls.Parser, jsonData tls.SharedPolicyExtract) {
-	data, _ := tls.HKDFExpandInnerHashInputBuilder(p.GetL5(), p.GetH2(), sha256.Size)
+func (pd *StatementByteFormat) prepareKDCInnerHash(p *mtls.Parser, jsonData mtls.SharedPolicyExtract) {
+	data, _ := mtls.HKDFExpandInnerHashInputBuilder(p.GetL5(), p.GetH2(), sha256.Size)
 	pd.HkdfSHTSInnerHash = postprocessInnerFirstBlockWithInput(data, "SHTS", jsonData.HkdfSHTSFirstBlock)
-	data, _ = tls.HKDFExpandInnerHashInputBuilder(p.GetL6(), nil, sha256.Size)
+	data, _ = mtls.HKDFExpandInnerHashInputBuilder(p.GetL6(), nil, sha256.Size)
 	pd.HkdfKFSInnerHash = postprocessInnerFirstBlockWithInput(data, "kfs", jsonData.HkdfKFSFirstBlock)
 	data = p.GetH7()
 	pd.HkdfSFInnerHash = postprocessInnerFirstBlockWithInput(data, "sf", jsonData.HkdfSFFirstBlock)
-	data, _ = tls.HKDFExpandInnerHashInputBuilder(p.GetL3(), p.GetH0(), sha256.Size)
+	data, _ = mtls.HKDFExpandInnerHashInputBuilder(p.GetL3(), p.GetH0(), sha256.Size)
 	pd.HkdfDHSInnerHash = postprocessInnerFirstBlockWithInput(data, "dHS", jsonData.HkdfDHSFirstBlock)
 	data = make([]byte, crypto.SHA256.Size())
 	pd.HkdfMSInnerHash = postprocessInnerFirstBlockWithInput(data, "MS", jsonData.HkdfMSFirstBlock)
-	data, _ = tls.HKDFExpandInnerHashInputBuilder(p.GetL8(), p.GetH3(), sha256.Size)
+	data, _ = mtls.HKDFExpandInnerHashInputBuilder(p.GetL8(), p.GetH3(), sha256.Size)
 	pd.HkdfSATSInnerHash = postprocessInnerFirstBlockWithInput(data, "SATS", jsonData.HkdfSATSFirstBlock)
-	data, _ = tls.HKDFExpandInnerHashInputBuilder(p.GetL7(), p.GetH3(), sha256.Size)
+	data, _ = mtls.HKDFExpandInnerHashInputBuilder(p.GetL7(), p.GetH3(), sha256.Size)
 	pd.HkdfCATSInnerHash = postprocessInnerFirstBlockWithInput(data, "CATS", jsonData.HkdfSATSFirstBlock)
-	data, _ = tls.HKDFExpandInnerHashInputBuilder("key", nil, 16)
+	data, _ = mtls.HKDFExpandInnerHashInputBuilder("key", nil, 16)
 	pd.HkdfKSAPPKeyInnerHash = postprocessInnerFirstBlockWithInput(data, "k_SAPP Key", jsonData.HkdfKSAPPFirstBlock)
-	data, _ = tls.HKDFExpandInnerHashInputBuilder("iv", nil, 12)
+	data, _ = mtls.HKDFExpandInnerHashInputBuilder("iv", nil, 12)
 	pd.HkdfKSAPPIVInnerHash = postprocessInnerFirstBlockWithInput(data, "k_SAPP IV", jsonData.HkdfKSAPPFirstBlock)
-	data, _ = tls.HKDFExpandInnerHashInputBuilder("key", nil, 16)
+	data, _ = mtls.HKDFExpandInnerHashInputBuilder("key", nil, 16)
 	pd.HkdfKCAPPKeyInnerHash = postprocessInnerFirstBlockWithInput(data, "k_CAPP Key", jsonData.HkdfKCAPPFirstBlock)
-	data, _ = tls.HKDFExpandInnerHashInputBuilder("iv", nil, 12)
+	data, _ = mtls.HKDFExpandInnerHashInputBuilder("iv", nil, 12)
 	pd.HkdfKCAPPIVInnerHash = postprocessInnerFirstBlockWithInput(data, "k_CAPP IV", jsonData.HkdfKCAPPFirstBlock)
 }
 
@@ -317,7 +319,7 @@ func JsonFileWrapper(file string) string {
 }
 
 func postprocessInnerFirstBlockWithInput(data []byte, desc string, firstBlockStr string) (inner []byte) {
-	hmacMD := new(tls.HmacMD)
+	hmacMD := new(mtls.HmacMD)
 	firstBlock, _ := hex.DecodeString(firstBlockStr)
 	hmacMD.CompInnerHash(data, firstBlock)
 	return hmacMD.GetHMACInner()

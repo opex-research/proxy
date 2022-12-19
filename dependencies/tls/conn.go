@@ -1446,8 +1446,9 @@ func (c *Conn) closeNotify() error {
 // HandshakeContext or the Dialer's DialContext method instead.
 func (c *Conn) Handshake() error {
 
+	// TODO: fix hardcoded path
 	// modified: logger
-	f3, err := os.OpenFile("prover/tls/evaluation.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	f3, err := os.OpenFile("log/tls-evaluation.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		log.Println("os.OpenFile error:", err)
 	}

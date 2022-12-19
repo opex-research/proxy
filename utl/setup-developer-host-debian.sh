@@ -8,7 +8,7 @@ sudo apt-get -y upgrade
 sudo apt-get -y install curl
 
 # install dependencies
-sudo apt-get -y install build-essential cmake git libssl-dev sudo python3 vim libgmp3-dev libprocps-dev openjdk-17-jdk junit4 python3-markdown libboost-program-options-dev pkg-config docker.io
+sudo apt-get -y install build-essential cmake git libssl-dev sudo python3 vim libgmp3-dev libprocps-dev python3-markdown libboost-program-options-dev pkg-config docker.io
 
 # install golang
 sudo rm -rf /usr/local/go

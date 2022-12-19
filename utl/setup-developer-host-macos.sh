@@ -2,7 +2,7 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd ${SCRIPT_DIR}
 
-# TODO: add macOS setup
+# TODO: add macOS setup to tun Docker
 
 # install homebrew
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -10,7 +10,6 @@ cd ${SCRIPT_DIR}
 ## install useful tools
 brew install cmake
 brew install go
-brew install openjdk@17
 brew install gmp
 brew install boost
 brew install gcc

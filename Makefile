@@ -12,7 +12,7 @@ setupDeveloperHost:
 	$(MAKE) -C utl/ setupDeveloperHost
 
 clean:
-	# TODO: remove build outputs
+	# TODO: remove build outputs via Makefile
 	rm -rf ./dependencies/jsnark-demo/JsnarkCircuitBuilder/bin
 	rm -rf ./dependencies/libsnark-demo/build
 	rm -rf origo
@@ -34,5 +34,5 @@ buildDockerImageClean: clean
 runDockerImage:
 	$(MAKE) -C utl/ runDockerImage
 
-runEvaluationLocal: build
+runEvaluationLocal:
 	$(MAKE) -C utl/ runEvaluationLocal

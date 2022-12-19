@@ -10,28 +10,17 @@ cleanEvaluationLogs()
 {
   # echo "I was called as : $@"
   echo "cleaning evaluation logs"
+  rm -rf log
   rm -rf proxy/service/evaluation.log
-  rm -rf commands/evaluation.log
 }
 
 cleanCapturedTraffic()
 {
   echo "cleaning capture traffic data"
-  rm -rf proxy/service/local_storage/PublicInput.json
-  rm -rf proxy/service/local_storage/ProverSentRecords.raw
-  rm -rf proxy/service/local_storage/ProverSentRecords.txt
-  rm -rf proxy/service/local_storage/ProverSentRecords.raw
-  rm -rf proxy/service/local_storage/ProverSentRecords.txt
+  rm -rf local_storage
+  rm -rf proxy/service/local_storage
 }
 
-cleanSnarkFiles()
-{
-  echo "cleaning snark specific files"
-  rm -rf dependencies/jsnark-demo/JsnarkCircuitBuilder/src/examples/generators/transpiled/LocalGen.java
-  rm -rf dependencies/jsnark-demo/JsnarkCircuitBuilder/src/examples/generators/transpiled/PayPalGen.java
-  rm -rf dependencies/jsnark-demo/JsnarkCircuitBuilder/bin/examples/generators/transpiled/LocalGen.class
-  rm -rf dependencies/jsnark-demo/JsnarkCircuitBuilder/bin/examples/generators/transpiled/PayPalGen.class
-}
 
 runEvaluationLocal()
 {
@@ -41,6 +30,7 @@ runEvaluationLocal()
 
   # logging cleanup
   cleanEvaluationLogs
+  mkdir log
 
   ###### local mode ######################
 
@@ -54,9 +44,8 @@ runEvaluationLocal()
 
     # cleaning files
     cleanCapturedTraffic
-
-    # clean up snark files
-    cleanSnarkFiles
+    mkdir local_storage
+    mkdir -p proxy/service/local_storage
 
     # print policy name
     echo evaluate policy file: $val

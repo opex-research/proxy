@@ -47,8 +47,9 @@ func (v *Verifier) Verify() error {
 	// value shortening
 	spe := v.PublicInput
 
+	// TODO: fix hardcoded path
 	// zkp verification command
-	cmd := exec.Command("./jsnark_interface/bin/run_proxy_verify", spe.HkdfSHTSInnerHash, spe.HkdfKFSInnerHash, spe.HkdfSFInnerHash, spe.HkdfDHSInnerHash, spe.HkdfMSInnerHash, spe.HkdfSATSInnerHash, spe.HkdfCATSInnerHash, spe.HkdfKSAPPKeyInnerHash, spe.HkdfKSAPPIVInnerHash, spe.HkdfKCAPPKeyInnerHash, spe.HkdfKCAPPIVInnerHash, spe.HkdfSF, spe.CiphertextToProof, spe.SeqCounter, spe.Threshold)
+	cmd := exec.Command("./jsnark_interface/run_proxy_verify", spe.HkdfSHTSInnerHash, spe.HkdfKFSInnerHash, spe.HkdfSFInnerHash, spe.HkdfDHSInnerHash, spe.HkdfMSInnerHash, spe.HkdfSATSInnerHash, spe.HkdfCATSInnerHash, spe.HkdfKSAPPKeyInnerHash, spe.HkdfKSAPPIVInnerHash, spe.HkdfKCAPPKeyInnerHash, spe.HkdfKCAPPIVInnerHash, spe.HkdfSF, spe.CiphertextToProof, spe.SeqCounter, spe.Threshold)
 	cmd.Dir = v.Config.ZkSnarkBuildPath
 
 	// execute command

@@ -15,7 +15,7 @@ type ProcessID struct {
 func StartLogging(commandName string) (*os.File, time.Time, error) {
 
 	// open logfile
-	f, err := os.OpenFile("commands/evaluation.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	f, err := os.OpenFile("log/utils-evaluation.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 	if err != nil {
 		log.Println("os.OpenFile error:", err)
 		return nil, time.Time{}, err
