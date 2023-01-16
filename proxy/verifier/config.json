@@ -1,0 +1,9 @@
+{
+	"ZkSnarkBuildPath": "dependencies/libsnark-demo/build/libsnark/",
+	"StoragePath": "local_storage/",
+	"ProverSentRecordsFileName": "ProverSentRecords",
+	"ServerSentRecordsFileName": "ServerSentRecords",
+	"CertificatePath": "certs/certificates/",
+	"PublicInputFileName": "PublicInput",
+	"ProverShareFilePath": "local_storage/PolicyExtractJsonShared"
+}
