@@ -55,7 +55,7 @@ func NewParser() (*Parser, error) {
 	parser.storagePath = "./local_storage/"
 	parser.serverRecordPath = "ServerSentRecords.raw"
 	parser.clientRecordPath = "ClientSentRecords.raw"
-	parser.caPath = "../certs/certificates/ca.crt"
+	parser.caPath = "../client/certs/certificates/ca.crt"
 	parser.clientFilePath = parser.storagePath + parser.clientRecordPath
 	parser.serverFilePath = parser.storagePath + parser.serverRecordPath
 	parser.secretPath = "../client/local_storage/kdc_shared.json"
