@@ -13,6 +13,8 @@ require (
 	golang.org/x/sync v0.1.0
 )
 
+require github.com/didiercrunch/paillier v0.0.0-20180810105046-753322e473bf
+
 require (
 	github.com/bits-and-blooms/bitset v1.8.0 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect

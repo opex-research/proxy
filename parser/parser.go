@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	tls "proxy/tls_fork"
+	tls "proxy/tls-fork"
 	u "proxy/utils"
 
 	"github.com/rs/zerolog/log"

@@ -2,7 +2,7 @@ package verifier
 
 import (
 	"encoding/hex"
-	glg "proxy/gnark_lib/circuits/gadgets"
+	glg "proxy/tls-zkp/circuits/gadgets"
 	u "proxy/utils"
 	"strconv"
 
