@@ -4,6 +4,9 @@ import (
 	"flag"
 	"time"
 	"net/http"
+    "encoding/json"
+    "io"
+    "os"
 
 	// "crypto/tls"
 
@@ -102,6 +105,46 @@ func postprocessAndSetupHandler(w http.ResponseWriter, r *http.Request) {
 func postprocessHandler(w http.ResponseWriter, r *http.Request) {
     start := time.Now()
 
+    body, err := io.ReadAll(r.Body)
+    if err != nil {
+        respondWithError(w, "Error reading request body", err)
+        return
+    }
+    
+    defer r.Body.Close()
+
+    var combinedData u.CombinedData
+    err = json.Unmarshal(body, &combinedData)
+    if err != nil {
+        respondWithError(w, "Error unmarshalling combined JSON data", err)
+        return
+    }
+
+    // Save each component to a file in /local_storage
+    err = u.SaveJSONToFile("kdc_shared.json", combinedData.KDCShared)
+    if err != nil {
+        respondWithError(w, "Failed to save kdc_shared.json", err)
+        return
+    }
+    
+    err = u.SaveJSONToFile("recordtag_public_input.json", combinedData.RecordTagPublic)
+    if err != nil {
+        respondWithError(w, "Failed to save recordtag_public_input.json", err)
+        return
+    }
+
+    err = u.SaveJSONToFile("recorddata_public_input.json", combinedData.RecordDataPublic)
+    if err != nil {
+        respondWithError(w, "Failed to save recorddata_public_input.json", err)
+        return
+    }
+
+    err = u.SaveJSONToFile("kdc_public_input.json", combinedData.KDCPublicInput)
+    if err != nil {
+        respondWithError(w, "Failed to save kdc_public_input.json", err)
+        return
+    }
+
     // initialize parser
     parser, err := p.NewParser()
     if err != nil {
@@ -187,12 +230,28 @@ func setupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    w.WriteHeader(http.StatusOK)
     w.Write([]byte("Setup completed"))
 }
 
 
-func verifyHandler(w http.ResponseWriter, r *http.Request) {
+func verifyHandler(w http.ResponseWriter, r *http.Request) { 
+    backend := "groth16"
+    
+    // Read the proof data from the request body
+    proofData, err := io.ReadAll(r.Body)
+    if err != nil {
+        respondWithError(w, "Failed to read proof data from request", err)
+        return
+    }
+
+    // Write the proof data to the desired file
+    proofFilePath := "local_storage/circuits/oracle_"+backend+".proof"
+    err = os.WriteFile(proofFilePath, proofData, 0644)
+    if err != nil {
+        respondWithError(w, "Failed to write proof data to file", err)
+        return
+    }
+
     // circuit should be parsed because it's compiled by a trusted third-party.
     assignment, err := v.ComputeWitness()
     if err != nil {
@@ -200,7 +259,6 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    backend := "groth16"
     err = v.VerifyCircuit(backend, assignment)
     if err != nil {
         respondWithError(w, "v.VerifyCircuit()", err)

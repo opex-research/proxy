@@ -8,9 +8,17 @@ import (
 	"fmt"
 	"io"
 	"os"
+    "path/filepath"
 
 	"github.com/rs/zerolog/log"
 )
+
+type CombinedData struct {
+    KDCShared         map[string]interface{} `json:"kdc_shared"`
+    RecordTagPublic   map[string]interface{} `json:"recordtag_public"`
+    RecordDataPublic  map[string]interface{} `json:"recorddata_public"`
+    KDCPublicInput    map[string]interface{} `json:"kdc_public_input"`
+}
 
 func ReadM(filePath string) (map[string]string, error) {
 
@@ -239,4 +247,19 @@ func getFileInfo(filePath string) (os.FileInfo, error) {
 		return nil, err
 	}
 	return fi, nil
+}
+
+func SaveJSONToFile(filename string, data map[string]interface{}) error {
+    jsonData, err := json.MarshalIndent(data, "", "  ")
+    if err != nil {
+        return err
+    }
+    
+    fullPath := filepath.Join("local_storage", filename)
+    
+    err = os.WriteFile(fullPath, jsonData, 0644)
+    if err != nil {
+        return err
+    }
+    return nil
 }

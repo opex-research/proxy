@@ -55,11 +55,11 @@ func NewParser() (*Parser, error) {
 	parser.storagePath = "./local_storage/"
 	parser.serverRecordPath = "ServerSentRecords.raw"
 	parser.clientRecordPath = "ClientSentRecords.raw"
-	parser.caPath = "../client/certs/certificates/ca.crt"
+	parser.caPath = "./certs/certificates/ca.crt"
 	parser.clientFilePath = parser.storagePath + parser.clientRecordPath
 	parser.serverFilePath = parser.storagePath + parser.serverRecordPath
-	parser.secretPath = "../client/local_storage/kdc_shared.json"
-	parser.authtagPath = "../client/local_storage/recordtag_public_input.json"
+	parser.secretPath = "./local_storage/kdc_shared.json"
+	parser.authtagPath = "./local_storage/recordtag_public_input.json"
 
 	// configure tls 1.3 parameters
 	parser.cipherID = tls.TLS_AES_128_GCM_SHA256
@@ -131,7 +131,6 @@ func (p *Parser) ReadTranscript() error {
 	p.tdServer.SetCipherParameters(p.tlsParams.shts)
 
 	// continue parsing server encrypted extension
-	// attention: the function verifies the server side certificate
 	err = p.tdServer.ParseServerEncryptedExtension()
 	if err != nil {
 		log.Error().Err(err).Msg("p.tdServer.parseServerEncryptedExtension()")
@@ -139,6 +138,7 @@ func (p *Parser) ReadTranscript() error {
 	}
 
 	// parse server certificate
+	// attention: the function verifies the server side certificate
 	err = p.tdServer.ParseServerCertificate(p.tdClient.GetClientHello())
 	if err != nil {
 		log.Error().Err(err).Msg("p.tdServer.parseServerCertificate(p.tdClient.clientHello)")

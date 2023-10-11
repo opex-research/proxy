@@ -59,7 +59,7 @@ func readCircuitParams() (map[string]string, error) {
 	finalMap := make(map[string]string)
 
 	// read in record publ params
-	record_pub, err := u.ReadM("../client/local_storage/recorddata_public_input.json")
+	record_pub, err := u.ReadM("./local_storage/recorddata_public_input.json")
 	if err != nil {
 		log.Error().Msg("u.ReadM")
 		return nil, err

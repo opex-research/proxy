@@ -199,7 +199,7 @@ func readOracleParams() (map[string]string, error) {
 	finalMap := make(map[string]string)
 
 	// read in kdc publ params from client
-	kdc_client_pub, err := u.ReadM("../client/local_storage/kdc_public_input.json")
+	kdc_client_pub, err := u.ReadM("./local_storage/kdc_public_input.json")
 	if err != nil {
 		log.Error().Msg("u.ReadM")
 		return nil, err
@@ -235,7 +235,7 @@ func readOracleParams() (map[string]string, error) {
 	}
 
 	// read in record publ params
-	record_pub, err := u.ReadM("../client/local_storage/recorddata_public_input.json")
+	record_pub, err := u.ReadM("./local_storage/recorddata_public_input.json")
 	if err != nil {
 		log.Error().Msg("u.ReadM")
 		return nil, err
@@ -271,7 +271,7 @@ func VerifyCircuit(backend string, publicWitness witness.Witness) error {
 		// read R1CS, proving key and verifying keys
 		proof := groth16.NewProof(ecc.BN254)
 		vk := groth16.NewVerifyingKey(ecc.BN254)
-		u.Deserialize(proof, "../client/local_storage/circuits/oracle_"+backend+".proof")
+		u.Deserialize(proof, "./local_storage/circuits/oracle_"+backend+".proof")
 		u.Deserialize(vk, "./local_storage/circuits/oracle_"+backend+".vk")
 
 		err := groth16.Verify(proof, vk, publicWitness)
@@ -283,7 +283,7 @@ func VerifyCircuit(backend string, publicWitness witness.Witness) error {
 		proof := plonk.NewProof(ecc.BN254)
 		vk := plonk.NewVerifyingKey(ecc.BN254)
 
-		u.Deserialize(proof, "../client/local_storage/circuits/oracle_"+backend+".proof")
+		u.Deserialize(proof, "./local_storage/circuits/oracle_"+backend+".proof")
 		u.Deserialize(vk, "./local_storage/circuits/oracle_"+backend+".vk")
 
 		err := plonk.Verify(proof, vk, publicWitness)
