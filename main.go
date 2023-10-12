@@ -33,6 +33,10 @@ func main() {
 	// statistics on transcript data
 	stats := flag.Bool("stats", false, "measures transcript sizes and sizes of local storage files.")
 
+    // Set Proxy URL's
+	proxyListenerURL := flag.String("proxylistener", "", "URL of the proxy server")
+	proxyServerURL := flag.String("proxyserver", "", "URL of the proxy server")
+
 	// parse all flags
 	flag.Parse()
 
@@ -49,7 +53,7 @@ func main() {
 	if *listen {
     	// Start the listener in a separate Goroutine
 		go func() {
-			listener := l.NewListener()
+			listener := l.NewListener(*proxyListenerURL)
 			err := listener.Listen()
 			if err != nil {
 				log.Error().Err(err).Msg("listener.Listen()")
@@ -60,7 +64,7 @@ func main() {
 		time.Sleep(1 * time.Second)
 
 		// Start the HTTP server
-		startServer()
+		startServer(*proxyServerURL)
 	}
 
 
@@ -76,12 +80,12 @@ func main() {
 }
 
 // startServer initializes the HTTP server and routes
-func startServer() {
+func startServer(proxyServerURL string) {
     http.HandleFunc("/postprocess", postprocessAndSetupHandler)
     http.HandleFunc("/verify", verifyHandler)
 
-    log.Info().Msg("HTTP Server started at :8080")
-    err := http.ListenAndServe(":8080", nil)
+    log.Info().Msg("HTTP Server started at " + proxyServerURL)
+    err := http.ListenAndServe(proxyServerURL, nil)
     if err != nil {
         log.Fatal().Err(err).Msg("Failed to start the HTTP server")
     }
@@ -243,6 +247,9 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
         respondWithError(w, "Failed to read proof data from request", err)
         return
     }
+
+    // NEW: Log the size of received proof data and its first few bytes
+    log.Debug().Int("bytesReceived", len(proofData)).Msg("Total size of proof received from client.")
 
     // Write the proof data to the desired file
     proofFilePath := "local_storage/circuits/oracle_"+backend+".proof"
