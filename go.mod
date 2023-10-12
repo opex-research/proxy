@@ -3,8 +3,8 @@ module proxy
 go 1.19
 
 require (
-	github.com/consensys/gnark v0.9.0-alpha
-	github.com/consensys/gnark-crypto v0.11.2
+	github.com/consensys/gnark v0.9.0
+	github.com/consensys/gnark-crypto v0.12.1
 	// github.com/consensys/gnark v0.7.2-0.20230518132517-274c883477ec
 	// github.com/consensys/gnark-crypto v0.11.1-0.20230508024855-0cd4994b7f0b
 	github.com/montanaflynn/stats v0.7.1
@@ -12,8 +12,6 @@ require (
 	golang.org/x/crypto v0.12.0
 	golang.org/x/sync v0.1.0
 )
-
-require github.com/didiercrunch/paillier v0.0.0-20180810105046-753322e473bf
 
 require (
 	github.com/bits-and-blooms/bitset v1.8.0 // indirect

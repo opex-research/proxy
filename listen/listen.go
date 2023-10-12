@@ -25,11 +25,10 @@ type Listener struct {
 	LocalhostPort             string
 }
 
-func NewListener() Listener {
+func NewListener(proxyURL string) Listener {
 
-	// change for better config management
 	return Listener{
-		ProxyURL:                  "localhost:8082",
+		ProxyURL:                  proxyURL,
 		StoragePath:               "./local_storage/",
 		ServerSentRecordsFileName: "ServerSentRecords",
 		ClientSentRecordsFileName: "ClientSentRecords",
