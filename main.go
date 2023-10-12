@@ -1,12 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
-	"time"
+	"fmt"
+	"io"
 	"net/http"
-    "encoding/json"
-    "io"
-    "os"
+	"os"
+	"time"
 
 	// "crypto/tls"
 
@@ -33,7 +34,7 @@ func main() {
 	// statistics on transcript data
 	stats := flag.Bool("stats", false, "measures transcript sizes and sizes of local storage files.")
 
-    // Set Proxy URL's
+	// Set Proxy URL's
 	proxyListenerURL := flag.String("proxylistener", "", "URL of the proxy server")
 	proxyServerURL := flag.String("proxyserver", "", "URL of the proxy server")
 
@@ -51,7 +52,7 @@ func main() {
 
 	// start proxy in listener mode
 	if *listen {
-    	// Start the listener in a separate Goroutine
+		// Start the listener in a separate Goroutine
 		go func() {
 			listener := l.NewListener(*proxyListenerURL)
 			err := listener.Listen()
@@ -67,7 +68,6 @@ func main() {
 		startServer(*proxyServerURL)
 	}
 
-
 	// additional stats
 	if *stats {
 		err := u.TrascriptStats()
@@ -81,201 +81,196 @@ func main() {
 
 // startServer initializes the HTTP server and routes
 func startServer(proxyServerURL string) {
-    http.HandleFunc("/postprocess", postprocessAndSetupHandler)
-    http.HandleFunc("/verify", verifyHandler)
+	http.HandleFunc("/postprocess", postprocessAndSetupHandler)
+	http.HandleFunc("/verify", verifyHandler)
 
-    log.Info().Msg("HTTP Server started at " + proxyServerURL)
-    err := http.ListenAndServe(proxyServerURL, nil)
-    if err != nil {
-        log.Fatal().Err(err).Msg("Failed to start the HTTP server")
-    }
+	log.Info().Msg("HTTP Server started at " + proxyServerURL)
+	err := http.ListenAndServe(proxyServerURL, nil)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to start the HTTP server")
+	}
 }
 
 func postprocessAndSetupHandler(w http.ResponseWriter, r *http.Request) {
-
-	postprocessHandler(w, r)
-
-	if w.Header().Get("Content-Type") == "application/json" {
+	body, err := postprocessHandler(r)
+	if err != nil {
+		respondWithError(w, "Postprocess Error", err)
 		return
 	}
 
-	setupHandler(w, r)
-}
+	if body != nil {
+		w.WriteHeader(http.StatusOK)
+		w.Write(body)
+		return
+	}
 
+	body, err = setupHandler(r)
+	if err != nil {
+		respondWithError(w, "Setup Error", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(body)
+}
 
 // handle postprocess
 // verifies SF with public data
 // verifies server certificate
-func postprocessHandler(w http.ResponseWriter, r *http.Request) {
-    start := time.Now()
+func postprocessHandler(r *http.Request) ([]byte, error) {
+	start := time.Now()
 
-    body, err := io.ReadAll(r.Body)
-    if err != nil {
-        respondWithError(w, "Error reading request body", err)
-        return
-    }
-    
-    defer r.Body.Close()
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading request body")
+	}
 
-    var combinedData u.CombinedData
-    err = json.Unmarshal(body, &combinedData)
-    if err != nil {
-        respondWithError(w, "Error unmarshalling combined JSON data", err)
-        return
-    }
+	defer r.Body.Close()
 
-    // Save each component to a file in /local_storage
-    err = u.SaveJSONToFile("kdc_shared.json", combinedData.KDCShared)
-    if err != nil {
-        respondWithError(w, "Failed to save kdc_shared.json", err)
-        return
-    }
-    
-    err = u.SaveJSONToFile("recordtag_public_input.json", combinedData.RecordTagPublic)
-    if err != nil {
-        respondWithError(w, "Failed to save recordtag_public_input.json", err)
-        return
-    }
+	var combinedData u.CombinedData
+	err = json.Unmarshal(body, &combinedData)
+	if err != nil {
+		return nil, fmt.Errorf("Error unmarshalling combined JSON data")
+	}
 
-    err = u.SaveJSONToFile("recorddata_public_input.json", combinedData.RecordDataPublic)
-    if err != nil {
-        respondWithError(w, "Failed to save recorddata_public_input.json", err)
-        return
-    }
+	// Save each component to a file in /local_storage
+	err = u.SaveJSONToFile("kdc_shared.json", combinedData.KDCShared)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to save kdc_shared.json")
+	}
 
-    err = u.SaveJSONToFile("kdc_public_input.json", combinedData.KDCPublicInput)
-    if err != nil {
-        respondWithError(w, "Failed to save kdc_public_input.json", err)
-        return
-    }
+	err = u.SaveJSONToFile("recordtag_public_input.json", combinedData.RecordTagPublic)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to save recordtag_public_input.json")
+	}
 
-    // initialize parser
-    parser, err := p.NewParser()
-    if err != nil {
-        respondWithError(w, "tls.NewParser()", err)
-        return
-    }
+	err = u.SaveJSONToFile("recorddata_public_input.json", combinedData.RecordDataPublic)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to save recorddata_public_input.json")
+	}
 
-    // read in secrets which have been shared by prover
-    err = parser.ReadTLSParams()
-    if err != nil {
-        respondWithError(w, "parser.ReadTLSParams()", err)
-        return
-    }
+	err = u.SaveJSONToFile("kdc_public_input.json", combinedData.KDCPublicInput)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to save kdc_public_input.json")
+	}
 
-    // read transcript of interest to create kdc parameters
-    // parser.ReadTranscript verifies the server certificate
-    err = parser.ReadTranscript()
-    if err != nil {
-        respondWithError(w, "parser.ReadTranscript()", err)
-        return
-    }
+	// initialize parser
+	parser, err := p.NewParser()
+	if err != nil {
+		return nil, fmt.Errorf("tls.NewParser()")
+	}
 
-    // verify SF and SHTS derivation against public input values (intermediate hashes)
-    err = parser.VerifyServerFinished()
-    if err != nil {
-        respondWithError(w, "parser.VerifySF()", err)
-        return
-    }
+	// read in secrets which have been shared by prover
+	err = parser.ReadTLSParams()
+	if err != nil {
+		return nil, fmt.Errorf("parser.ReadTLSParams()")
+	}
 
-    // compute public input parameters
-    err = parser.CreateKdcPublicInput()
-    if err != nil {
-        respondWithError(w, "parser.CreateKdcPublicInput()", err)
-        return
-    }
+	// read transcript of interest to create kdc parameters
+	// parser.ReadTranscript verifies the server certificate
+	err = parser.ReadTranscript()
+	if err != nil {
+		return nil, fmt.Errorf("parser.ReadTranscript()")
+	}
 
-    // store confirmed kdc parameters
-    err = parser.StoreConfirmedKdcParameters()
-    if err != nil {
-        respondWithError(w, "parser.StoreConfirmedKdcParameters()", err)
-        return
-    }
+	// verify SF and SHTS derivation against public input values (intermediate hashes)
+	err = parser.VerifyServerFinished()
+	if err != nil {
+		return nil, fmt.Errorf("parser.VerifySF()")
+	}
 
-    // read record parameters (ciphertext chunks + tag)
-    rps, err := parser.ReadRecordParams()
-    if err != nil {
-        respondWithError(w, "parser.ReadRecordParams()", err)
-        return
-    }
+	// compute public input parameters
+	err = parser.CreateKdcPublicInput()
+	if err != nil {
+		return nil, fmt.Errorf("parser.CreateKdcPublicInput()")
+	}
 
-    // verify authtag and confirm public output for tag verification
-    // further stores confirmed parameters
-    err = parser.CheckAuthTags(rps)
-    if err != nil {
-        respondWithError(w, "parser.CheckAuthTag()", err)
-        return
-    }
+	// store confirmed kdc parameters
+	err = parser.StoreConfirmedKdcParameters()
+	if err != nil {
+		return nil, fmt.Errorf("parser.StoreConfirmedKdcParameters()")
+	}
 
-    elapsed := time.Since(start)
-    log.Debug().Str("elapsed", elapsed.String()).Msg("proxy postprocess time.")
+	// read record parameters (ciphertext chunks + tag)
+	rps, err := parser.ReadRecordParams()
+	if err != nil {
+		return nil, fmt.Errorf("parser.ReadRecordParams()")
+	}
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte("Postprocess completed"))
+	// verify authtag and confirm public output for tag verification
+	// further stores confirmed parameters
+	err = parser.CheckAuthTags(rps)
+	if err != nil {
+		return nil, fmt.Errorf("parser.CheckAuthTag()")
+	}
+
+	elapsed := time.Since(start)
+	log.Debug().Str("elapsed", elapsed.String()).Msg("proxy postprocess time.")
+
+	// If you want to proceed to setupHandler without sending any message, return nil
+	return nil, nil
 }
 
-func setupHandler(w http.ResponseWriter, r *http.Request) {
-    circuit, err := v.GetCircuit()
+func setupHandler(r *http.Request) ([]byte, error) {
+	circuit, err := v.GetCircuit()
 	if err != nil {
-		respondWithError(w, "v.GetCircuit()", err)
-		return
+		return nil, err
 	}
 
 	backend := "groth16"
 	ccs, err := v.CompileCircuit(backend, circuit)
 	if err != nil {
-		respondWithError(w, "v.CompileCircuit()", err)
-		return
+		return nil, err
 	}
 
 	err = v.ComputeSetup(backend, ccs)
 	if err != nil {
-		respondWithError(w, "v.ComputeSetup()", err)
+		return nil, err
+	}
+
+	pkpath := "local_storage/circuits/oracle_" + backend + ".pk"
+	_pk, err := os.ReadFile(pkpath)
+
+	return _pk, nil
+}
+
+func verifyHandler(w http.ResponseWriter, r *http.Request) {
+	backend := "groth16"
+
+	// Read the proof data from the request body
+	proofData, err := io.ReadAll(r.Body)
+	if err != nil {
+		respondWithError(w, "Failed to read proof data from request", err)
 		return
 	}
 
-    w.Write([]byte("Setup completed"))
+	// NEW: Log the size of received proof data and its first few bytes
+	log.Debug().Int("bytesReceived", len(proofData)).Msg("Total size of proof received from client.")
+
+	// Write the proof data to the desired file
+	proofFilePath := "local_storage/circuits/oracle_" + backend + ".proof"
+	err = os.WriteFile(proofFilePath, proofData, 0644)
+	if err != nil {
+		respondWithError(w, "Failed to write proof data to file", err)
+		return
+	}
+
+	// circuit should be parsed because it's compiled by a trusted third-party.
+	assignment, err := v.ComputeWitness()
+	if err != nil {
+		respondWithError(w, "v.ComputeWitness()", err)
+		return
+	}
+
+	err = v.VerifyCircuit(backend, assignment)
+	if err != nil {
+		respondWithError(w, "v.VerifyCircuit()", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Verification completed"))
 }
-
-
-func verifyHandler(w http.ResponseWriter, r *http.Request) { 
-    backend := "groth16"
-    
-    // Read the proof data from the request body
-    proofData, err := io.ReadAll(r.Body)
-    if err != nil {
-        respondWithError(w, "Failed to read proof data from request", err)
-        return
-    }
-
-    // NEW: Log the size of received proof data and its first few bytes
-    log.Debug().Int("bytesReceived", len(proofData)).Msg("Total size of proof received from client.")
-
-    // Write the proof data to the desired file
-    proofFilePath := "local_storage/circuits/oracle_"+backend+".proof"
-    err = os.WriteFile(proofFilePath, proofData, 0644)
-    if err != nil {
-        respondWithError(w, "Failed to write proof data to file", err)
-        return
-    }
-
-    // circuit should be parsed because it's compiled by a trusted third-party.
-    assignment, err := v.ComputeWitness()
-    if err != nil {
-        respondWithError(w, "v.ComputeWitness()", err)
-        return
-    }
-
-    err = v.VerifyCircuit(backend, assignment)
-    if err != nil {
-        respondWithError(w, "v.VerifyCircuit()", err)
-        return
-    }
-
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte("Verification completed"))
-}
-
 
 func respondWithError(w http.ResponseWriter, logMsg string, err error) {
 	log.Error().Err(err).Msg(logMsg)
