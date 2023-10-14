@@ -339,16 +339,24 @@ func (p *Parser) StoreConfirmedKdcParameters() error {
 	jsonData["tkCappIn"] = hex.EncodeToString(p.tkCappIn)
 	// jsonData["ivCappIn"] = hex.EncodeToString(p.ivCappIn)
 
+	// Log the intention to store the data
+	log.Debug().Msg("Storing confirmed KDC parameters to ./local_storage/kdc_confirmed.json")
+
 	// store data
 	file, err := json.MarshalIndent(jsonData, "", " ")
 	if err != nil {
 		log.Error().Err(err).Msg("json.MarshalIndent")
 		return err
 	}
+
 	err = ioutil.WriteFile("./local_storage/kdc_confirmed.json", file, 0644)
 	if err != nil {
 		log.Error().Err(err).Msg("ioutil.WriteFile")
+		return err
 	}
+
+	// Log successful storage
+	log.Debug().Msg("Confirmed KDC parameters stored successfully.")
 
 	return nil
 }
@@ -390,7 +398,6 @@ func (p *Parser) ReadRecordParams() (map[string]map[string]string, error) {
 	}
 	return rps, nil
 }
-
 func (p *Parser) CheckAuthTags(rps map[string]map[string]string) error {
 
 	// read public input for record tag computation
@@ -402,8 +409,13 @@ func (p *Parser) CheckAuthTags(rps map[string]map[string]string) error {
 	// init confirmed data
 	confirmedJson := make(map[string]map[string]string)
 
+	var isVerified bool // To check if we've successfully verified any sequence
+
 	// loop over all sequence numbers and verify authentication tags
 	for seq, record := range rps {
+		if isVerified {
+			break // Exit loop once we've found a verified sequence
+		}
 
 		r, ok := authPI[seq]
 		if ok {
@@ -419,7 +431,8 @@ func (p *Parser) CheckAuthTags(rps map[string]map[string]string) error {
 
 			// verify authtag
 			if tag != c {
-				return errors.New("authtag13 verification failed")
+				log.Error().Str("authtag verification", seq).Msg("authtag13 verification failed for sequence number: " + seq)
+				continue
 			}
 
 			// create data structure of confirmed parameters
@@ -430,12 +443,17 @@ func (p *Parser) CheckAuthTags(rps map[string]map[string]string) error {
 			jsonData["ecb0"] = ecb0
 			jsonData["ecbk"] = ecbk
 			confirmedJson[seq] = jsonData
+			isVerified = true
 		}
 	}
 
-	err = u.StoreMM(confirmedJson, "record_confirmed")
-	if err != nil {
-		return err
+	if isVerified {
+		err = u.StoreMM(confirmedJson, "record_confirmed")
+		if err != nil {
+			return err
+		}
+	} else {
+		log.Error().Msg("No sequences were successfully verified.")
 	}
 
 	return nil

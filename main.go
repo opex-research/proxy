@@ -92,6 +92,8 @@ func startServer(proxyServerURL string) {
 }
 
 func postprocessAndSetupHandler(w http.ResponseWriter, r *http.Request) {
+	log.Debug().Msg("Starting postprocessAndSetupHandler()!")
+
 	body, err := postprocessHandler(r)
 	if err != nil {
 		respondWithError(w, "Postprocess Error", err)
@@ -154,6 +156,8 @@ func postprocessHandler(r *http.Request) ([]byte, error) {
 		return nil, fmt.Errorf("Failed to save kdc_public_input.json")
 	}
 
+	log.Debug().Msg("All files sent by client stored successfully!")
+
 	// initialize parser
 	parser, err := p.NewParser()
 	if err != nil {
@@ -196,6 +200,7 @@ func postprocessHandler(r *http.Request) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parser.ReadRecordParams()")
 	}
+	// log.Debug().Interface("recordParams", rps).Msg("Record Parameters.")
 
 	// verify authtag and confirm public output for tag verification
 	// further stores confirmed parameters
