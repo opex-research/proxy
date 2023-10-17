@@ -1,8 +1,8 @@
 [submodule "tls-fork"]
 	path = tls-fork
-	url = git@github.com:opex-research/tls-fork.git
+	url = https://github.com/opex-research/tls-fork
 	branch = proxy
 [submodule "tls-zkp"]
 	path = tls-zkp
-	url = git@github.com:opex-research/tls-zkp.git
-	branch = main
+	url = https://github.com/opex-research/tls-zkp
+	branch = realserver
