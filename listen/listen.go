@@ -44,7 +44,7 @@ func (l *Listener) Listen() error {
 	if err != nil {
 		log.Error().Err(err).Msg("net.Listen()")
 	}
-	log.Debug().Msg("start PROXY capturing on " + listener.Addr().String())
+	log.Info().Msg("start PROXY capturing on " + listener.Addr().String())
 
 	// infinite loop
 	for {

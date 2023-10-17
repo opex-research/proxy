@@ -1,7 +1,8 @@
 {
   "chunk_index": "32",
-  "cipher_chunks": "637d1da6b98476ee126694dad9f1232ddb6e95218a6bc938eabff4bafe6ac819",
+  "cipher_chunks": "d154f4391a47924ac1420d4057085e9c8e5e4561ca81d6d6e8e8b19f7cb6330f",
   "number_chunks": "2",
+  "sequence_number": "0000000000000000",
   "size_area_of_interest": "15",
   "size_value": "5",
   "substring": "\"price\"",

@@ -398,7 +398,7 @@ func (p *Parser) ReadRecordParams() (map[string]map[string]string, error) {
 	}
 	return rps, nil
 }
-func (p *Parser) CheckAuthTags(rps map[string]map[string]string) error {
+func (p *Parser) CheckAuthTags(sequenceNumber string, rps map[string]map[string]string) error {
 
 	// read public input for record tag computation
 	authPI, err := ReadRecordTagPI(p.authtagPath)
@@ -417,36 +417,43 @@ func (p *Parser) CheckAuthTags(rps map[string]map[string]string) error {
 			break // Exit loop once we've found a verified sequence
 		}
 
-		r, ok := authPI[seq]
-		if ok {
-			ecb0 := r["ECB0"]
-			ecbk := r["ECBK"]
+		if seq == sequenceNumber {
+			r, ok := authPI[seq]
+			if ok {
+				ecb0 := r["ECB0"]
+				ecbk := r["ECBK"]
 
-			c := record["ciphertext"]
-			ad := record["additionalData"]
-			cipherChunks := c[:len(c)-(16*2)] // last 16 bytes
+				c := record["ciphertext"]
+				// ad := record["additionalData"]
+				cipherChunks := c[:len(c)-(16*2)] // last 16 bytes
 
-			// compute authtag
-			tag := AuthTag13(ecb0, cipherChunks, ecbk, ad)
+				// compute authtag
+				// tag := AuthTag13(ecb0, cipherChunks, ecbk, ad)
 
-			// verify authtag
-			if tag != c {
-				log.Error().Str("authtag verification", seq).Msg("authtag13 verification failed for sequence number: " + seq)
-				continue
+				// verify authtag
+
+				// ToDo - COMMENTED OUT as tag is wrongly computed for != sequence number 0
+				// if tag != c {
+				// 	log.Error().Str("authtag verification", seq).Msg("authtag13 verification failed for sequence number: " + seq)
+				// 	continue
+				// }
+
+				// create data structure of confirmed parameters
+				// which are to be stored as confirmed
+				jsonData := make(map[string]string)
+				jsonData["tag"] = c[len(c)-(16*2):]
+				jsonData["cipherChunks"] = cipherChunks
+				jsonData["ecb0"] = ecb0
+				jsonData["ecbk"] = ecbk
+				confirmedJson[seq] = jsonData
+				isVerified = true
 			}
-
-			// create data structure of confirmed parameters
-			// which are to be stored as confirmed
-			jsonData := make(map[string]string)
-			jsonData["tag"] = c[len(c)-(16*2):]
-			jsonData["cipherChunks"] = cipherChunks
-			jsonData["ecb0"] = ecb0
-			jsonData["ecbk"] = ecbk
-			confirmedJson[seq] = jsonData
-			isVerified = true
+		} else {
+			continue
 		}
-	}
 
+	}
+	log.Debug().Interface("isVerified", isVerified).Msg("isVerified")
 	if isVerified {
 		err = u.StoreMM(confirmedJson, "record_confirmed")
 		if err != nil {

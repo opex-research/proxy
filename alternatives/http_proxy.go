@@ -50,7 +50,7 @@ func main() {
 	// http handler to catch incoming requests
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		log.Debug().Msg("start PROXY capturing.")
+		log.Info().Msg("start PROXY capturing.")
 
 		if r.Method != http.MethodConnect {
 			http.Error(w, "Non-http-connect Method not allowed", http.StatusMethodNotAllowed)

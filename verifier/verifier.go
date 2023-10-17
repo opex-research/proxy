@@ -35,6 +35,7 @@ func ComputeWitness() (witness.Witness, error) {
 	valueStart, _ := strconv.Atoi(params["value_start"])
 	valueEnd, _ := strconv.Atoi(params["value_end"])
 	// !!! policy value !!!
+	// TODO - Parse from policy
 	threshold := 38001
 
 	// kdc to bytes
@@ -61,6 +62,8 @@ func ComputeWitness() (witness.Witness, error) {
 	byteSlice, _ = hex.DecodeString(params["cipher_chunks"])
 	chipherChunksByteLen := len(byteSlice)
 	substringByteLen := len(params["substring"])
+	byteSlice, _ = hex.DecodeString(params["sequence_number"])
+	sequenceNumberByteLen := len(byteSlice)
 
 	// witness definition kdc
 	intermediateHashHSopadAssign := u.StrToIntSlice(params["intermediateHashHSopad"], true)
@@ -76,6 +79,7 @@ func ComputeWitness() (witness.Witness, error) {
 	ivAssign := u.StrToIntSlice(params["ivSapp"], true)
 	chipherChunksAssign := u.StrToIntSlice(params["cipher_chunks"], true)
 	substringAssign := u.StrToIntSlice(params["substring"], false)
+	sequenceNumberAssign := u.StrToIntSlice(params["sequence_number"], true)
 
 	// witness values preparation
 	assignment := glg.Tls13OracleWrapper{
@@ -101,6 +105,7 @@ func ComputeWitness() (witness.Witness, error) {
 		ValueStart:     valueStart,
 		ValueEnd:       valueEnd,
 		Threshold:      threshold,
+		SequenceNumber: [8]frontend.Variable{},
 	}
 
 	// kdc assign
@@ -139,6 +144,9 @@ func ComputeWitness() (witness.Witness, error) {
 	for i := 0; i < substringByteLen; i++ {
 		assignment.Substring[i] = substringAssign[i]
 	}
+	for i := 0; i < sequenceNumberByteLen; i++ {
+		assignment.SequenceNumber[i] = sequenceNumberAssign[i]
+	}
 
 	// fmt.Println("len intermediateHashHSopadByteLen:", intermediateHashHSopadByteLen)
 	// fmt.Println("len MSin:", MSinByteLen)
@@ -149,15 +157,16 @@ func ComputeWitness() (witness.Witness, error) {
 	// fmt.Println("len chipherChunksByteLen:", chipherChunksByteLen)
 	// fmt.Println("len ivByteLen:", ivByteLen)
 
-	// fmt.Println("intermediateHashHSopadAssign:", intermediateHashHSopadAssign)
-	// fmt.Println("MSinAssign:", MSinAssign)
-	// fmt.Println("SATSinAssign:", SATSinAssign)
-	// fmt.Println("tkSAPPinAssign:", tkSAPPinAssign)
-	// fmt.Println("ivCounterAssign:", ivCounterAssign)
-	// fmt.Println("ecbkAssign:", ecbkAssign)
-	// fmt.Println("ecb0Assign:", ecb0Assign)
-	// fmt.Println("chipherChunksAssign:", chipherChunksAssign)
-	// fmt.Println("ivAssign:", ivAssign)
+	log.Debug().Msgf("intermediateHashHSopadAssign: %v", intermediateHashHSopadAssign)
+	log.Debug().Msgf("MSinAssign: %v", MSinAssign)
+	log.Debug().Msgf("SATSinAssign: %v", SATSinAssign)
+	log.Debug().Msgf("tkSAPPinAssign: %v", tkSAPPinAssign)
+	log.Debug().Msgf("ivCounterAssign: %v", ivCounterAssign)
+	log.Debug().Msgf("ecbkAssign: %v", ecbkAssign)
+	log.Debug().Msgf("ecb0Assign: %v", ecb0Assign)
+	log.Debug().Msgf("chipherChunksAssign: %v", chipherChunksAssign)
+	log.Debug().Msgf("ivAssign: %v", ivAssign)
+	log.Debug().Msgf("sequenceNumberAssign: %v", sequenceNumberAssign)
 
 	// get witness
 	witnessPublic, err := frontend.NewWitness(&assignment, ecc.BN254.ScalarField(), frontend.PublicOnly())
@@ -249,6 +258,7 @@ func readOracleParams() (map[string]string, error) {
 	return finalMap, nil
 }
 
+// TODO - Add sequence number, currently hardcoded
 func addCounter(iv string) string {
 	// add counter to iv bytes
 	var sb strings.Builder
@@ -258,8 +268,7 @@ func addCounter(iv string) string {
 	for i := 0; i < 7; i++ {
 		sb.WriteString("0")
 	}
-	sb.WriteString("1")
-	// fmt.Println("len iv:", sb.String(), len(iv)/2)
+	sb.WriteString("2")
 	return sb.String()
 }
 

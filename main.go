@@ -158,6 +158,16 @@ func postprocessHandler(r *http.Request) ([]byte, error) {
 
 	log.Debug().Msg("All files sent by client stored successfully!")
 
+	// Get Sequence Number from the data provided by the client
+	seqInterface, ok := combinedData.RecordDataPublic["sequence_number"]
+	if !ok {
+		return nil, fmt.Errorf("sequence_number not found in RecordDataPublic")
+	}
+	seq, ok := seqInterface.(string)
+	if !ok {
+		return nil, fmt.Errorf("sequence_number is not a string")
+	}
+
 	// initialize parser
 	parser, err := p.NewParser()
 	if err != nil {
@@ -200,11 +210,11 @@ func postprocessHandler(r *http.Request) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("parser.ReadRecordParams()")
 	}
-	// log.Debug().Interface("recordParams", rps).Msg("Record Parameters.")
+	log.Debug().Interface("recordParams", rps).Msg("Record Parameters.")
 
 	// verify authtag and confirm public output for tag verification
 	// further stores confirmed parameters
-	err = parser.CheckAuthTags(rps)
+	err = parser.CheckAuthTags(seq, rps)
 	if err != nil {
 		return nil, fmt.Errorf("parser.CheckAuthTag()")
 	}

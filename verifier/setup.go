@@ -39,6 +39,10 @@ func GetCircuit() (frontend.Circuit, error) {
 	vs, _ := strconv.Atoi(params["value_start"])
 	ve, _ := strconv.Atoi(params["value_end"])
 
+	// Sequence Number
+	// seqBytes, _ := hex.DecodeString(params["sequence_number"])
+	// seqByteLen := len(seqBytes)
+
 	// var circuit kdcServerKey
 	circuit := glg.Tls13OracleWrapper{
 		PlainChunks:    make([]frontend.Variable, cipherChunksByteLen),

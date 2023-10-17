@@ -227,12 +227,12 @@ func AuthGCM(tagMaskCipher string, plaintextCipher string, galoisKexCipher strin
 	return hex.EncodeToString(out)
 }
 
-func AuthTag13(tagMaskCipher string, plaintextCipher string, galoisKexCipher string, additional string) string {
+func AuthTag13(tagMaskCipher string, plaintextCipher string, galoisKeyCipher string, additional string) string {
 
 	// decoding
 	tagMask, _ := hex.DecodeString(tagMaskCipher)
 	cipher1, _ := hex.DecodeString(plaintextCipher)
-	galoisKey, _ := hex.DecodeString(galoisKexCipher)
+	galoisKey, _ := hex.DecodeString(galoisKeyCipher)
 	additionalData, _ := hex.DecodeString(additional)
 
 	lenPlain := len(cipher1)
